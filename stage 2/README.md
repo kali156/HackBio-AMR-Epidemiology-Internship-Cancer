@@ -1,0 +1,555 @@
+---
+title: "Data Visualization code for Amr Proucts"
+author: "mahmoud hassanen(@Mahmoud203) , Sarah Shebl (@Sarah50) , Abdullah Ibrahim Ali(@Abdullah108) , Kareem El Sayed Saad Abd El Gawad (Kareem_101) , Nada Esmael Sleim (Eddy27) "
+date: "2024-09-14"
+---
+
+# 💡 Imprtant links :
+
+1. if you don't like the code here we even visualize it better in this [page](https://ivory-astrid-1.tiiny.site)
+
+2.  we create Notion [Report](https://vigorous-dahlia-f5d.notion.site/AMR-New-Products-Deep-Analysis-38b6b444f6224a15a3afd647f7e6c18f?pvs=4) if you don't want see a code 
+
+3.  Info graphic[ summary](https://drive.google.com/file/d/1xnLhcd_LJfnsJomjtbc3gQtF7GAVvwgg/view)
+
+## Used Data
+
+Raw Cholera Outbreak Data:  
+ from  the WHO (https://raw.githubusercontent.com/HackBio-Internship/public\_datasets/main/R/WHO\_AMR\_PRODUCTS\_DATA.tsv)
+
+   
+## Steps (100% using R script)
+
+1-Download the data   
+2-Data analysis and Manipulation  
+3-Generate Meaningful plots and infographic summary identify the Trends and significant product
+
+# Introduction.
+
+**Hi, this R markdown file for Data Visualization code.**
+
+## R code.
+
+
+first loading these Libraries
+
+```{r}
+#===================================library
+library(tidyverse)
+library(ggsci) 
+library(ggplot2)
+library(dplyr)
+
+```
+IF you don't have it install from that code
+```{r}
+#===================================library
+install.packages("tidyverse")
+install.packages("ggsci")
+install.packages("ggplot2")
+install.packages("dplyr")
+
+```
+
+### Cloning The data
+
+```{r}
+#====================================loading data
+data <- read.delim("https://raw.githubusercontent.com/HackBio-Internship/public_datasets/main/R/WHO_AMR_PRODUCTS_DATA.tsv", sep = "\t", header = TRUE)
+```
+
+### Cleaning the Data From '*N/A*' VALUES
+
+```{r}
+#====================================cleaning data 
+AMR_Products <- data %>%
+  filter(Active.against.priority.pathogens. !='N/A')%>%
+  group_by(Product.type, Active.against.priority.pathogens.) 
+```
+
+### Explore The data
+
+```{r, eval=FALSE}
+view(AMR_Products)
+dim(AMR_Products)
+table(AMR_Products$Product.name)
+
+```
+
+### General Distribution of the Data
+
+```{r}
+# Distribution of Product Type
+Product_type_summary<-AMR_Products%>%
+  group_by(Product.type)%>%
+  summarise(count=n())
+Product_type_summary
+
+
+ggplot(Product_type_summary, aes(x = Product.type, y = count, fill =Product.type)) +
+  geom_bar(stat = 'identity',width = 0.3,position = 'dodge') +
+  scale_fill_manual(values = c("#4F81BD", "#C0504D"))  +
+  theme_minimal()+xlab('')+
+  theme(text = element_text(size = 9),
+        plot.title = element_text(hjust =0.5,face = 'bold' ),legend.position = "bottom")
+
+```
+
+### create Drugs effective against The Pathogen Data
+
+```{r, eval=FALSE}
+#Test the product activity
+product_activity<-AMR_Products%>%group_by(Product.type,Active.against.priority.pathogens.)%>%
+  summarise(Count=n())
+product_activity
+```
+
+### Visualize the data
+
+```{r}
+product_activity<-AMR_Products%>%group_by(Product.type,Active.against.priority.pathogens.)%>%
+  summarise(Count=n())
+product_activity
+# Create the stacked bar chart that shows distribution of Product Type with activity status
+ggplot( product_activity, aes(x = Product.type, y = Count, fill = Active.against.priority.pathogens.)) +
+  geom_bar(stat = "identity", width = 0.8) +  
+  scale_fill_manual(values = c("Yes" = "#FF5733", "No" = "grey", "Possibly" = "#3357FF")) +
+  labs(
+    x = "Product Type",
+    y = "Count",
+    fill = "Activity Status"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### summarize the Data
+
+```{r}
+Route_Activity_relation <- AMR_Products %>%
+  group_by(Route.of.administration, Active.against.priority.pathogens.) %>%
+  summarise(Count = n(), .groups = 'drop')
+Route_Activity_relation
+```
+
+### Relation between Route Route.of administration and activity status
+
+```{r}
+ggplot_plot <- ggplot(Route_Activity_relation, aes(x = Route.of.administration, y = Count, color = Active.against.priority.pathogens.)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("Yes" = "#FF5733", "No" = "grey", "Possibly" = "#3357FF")) +
+  labs(title = "Relationship Between Route of Administration and Drug Effectiveness",
+       x = "Route of Administration",
+       y = "Number of Products",
+       color = "Effectiveness Against Priority Pathogens") +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title.position = "bottom")
+ggplot_plot
+```
+
+# Antibiotics
+
+## create Antibiotics data
+
+```{r}
+#================================Antibiotics data
+Antibiotics <- data %>% filter(Product.type == "Antibiotics")
+
+```
+
+## what is the R.D phase of antibiotic products
+
+```{r}
+ggplot(Antibiotics,mapping  = aes(R.D.phase,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(50))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.ticks.y = element_blank())
+```
+
+## what is The Route.of.administration of Antibiotics data
+
+```{r}
+#what is the route of adminstrtion of the products
+ggplot(Antibiotics,mapping = aes(Route.of.administration,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(46))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)
+  )
+```
+
+### loading Antibiotic activity data
+
+this is The Antibiotics That has show Result against priority Pathogen .
+
+```{r}
+ggplot(Antibiotics,mapping =aes(Active.against.priority.pathogens.,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(50))
+ggplot
+
+```
+
+### Visualize the data
+
+```{r}
+#loading Antibiotics data that had been shown result after testing 
+Antibiotics <- AMR_Products %>% filter(Product.type == "Antibiotics")
+
+```
+
+# Non Traditional categories.
+
+create ***Non Traditional categories*** data.
+
+```{r}
+# non traditional data categories
+Non.traditional = AMR_Products%>%filter(Product.type=="Non-traditional")
+colnames(Non.traditional)
+
+```
+
+## Visualize the data
+
+```{r}
+ggplot(Non.traditional, aes(x = "", y = Non.traditionals.categories, fill = factor(Non.traditionals.categories))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  scale_fill_discrete(name = "Non.traditionals.categories") +
+  labs(title = "Pie Chart of Non.traditionals.categories") +
+  theme_void() +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom",legend.title.position = "top")
+
+
+```
+
+## Which category has effect and on which pathogens
+
+```{r}
+# Create a simple dot plot 
+ggplot(Non.traditional, aes(x = Non.traditionals.categories, y = Pathogen.name)) +
+  geom_point(aes(color = Pathogen.name), size = 3, position = position_jitter(width = 0.2, height = 0.2)) +
+  labs(title = "Effect of Products on Pathogens",
+       x = "Non.traditionals.categories",
+       y = "Pathogen Name",
+       color = "Pathogen Name") +
+  theme(legend.position = "bottom")
+```
+
+# Bacteriophages and phage derived enzymes
+
+## create Bacteriophages and phage derived enzymes Data
+
+```{r}
+Bacteriophages_and_phage_derived_enzymes_data <- data %>%
+  filter(Non.traditionals.categories == "Bacteriophages and phage-derived enzymes")
+
+
+```
+
+### what is the route of administration
+
+```{r}
+ggplot(Bacteriophages_and_phage_derived_enzymes_data,mapping = aes(Route.of.administration,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+### what is R.D phase of this products
+
+```{r}
+ggplot(Bacteriophages_and_phage_derived_enzymes_data,mapping = aes(R.D.phase,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## products of Bacteriophages and phage derived enzymes against pathogens.
+
+### loading data
+
+```{r}
+Bacteriophages_and_phage_derived_enzymes_data <- AMR_Products %>% filter(Non.traditionals.categories == "Bacteriophages and phage-derived enzymes")
+
+```
+
+###visualize data
+
+```{r}
+#visualize data
+ggplot(Bacteriophages_and_phage_derived_enzymes_data,mapping = aes(Active.against.priority.pathogens.,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)
+  )
+```
+
+#Immunomodulating agents data
+
+## create Immunomodulating agents data
+
+```{r}
+Immunomodulating_agents_data <- data %>% filter(Non.traditionals.categories == "Immunomodulating agents")
+
+```
+
+## Products Used in Immunomodulating agents data
+
+```{r}
+ggplot(Immunomodulating_agents_data,mapping = aes(Antibacterial.class,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## what is R.D phase of this products
+
+```{r}
+ggplot(Immunomodulating_agents_data,mapping = aes(R.D.phase,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## what is the route of administration
+
+```{r}
+ggplot(Immunomodulating_agents_data,mapping = aes(Route.of.administration,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## Immunomodulating_agents_activity_data that have been Tested in activity against priority pathogen data
+
+### create data
+
+```{r}
+Immunomodulating_agents_activity_data <- AMR_Products %>% filter(Non.traditionals.categories == "Immunomodulating agents")
+
+```
+
+### Application on different pathogens
+
+```{r}
+Immunomodulating_agents <- Non.traditional %>%
+  filter(Product.name %in% c("Rhu-pGSN", "AB103"))
+Immunomodulating_agents
+```
+
+### visualize it
+
+```{r}
+ggplot(Immunomodulating_agents, aes(x = Product.name, y = Pathogen.name)) +
+  geom_point(aes(color = Pathogen.name), size = 3, position = position_jitter(width = 0.2, height = 0.2)) +
+  labs(title = "Effect of Rhu-pGSN and AB103 on Pathogens",
+       x = "Product Name",
+       y = "Pathogen Name",
+       color = "Pathogen Name") +
+  theme(
+    text = element_text(size = 16),  # Set base font size for all text
+    plot.title = element_text(size = 20, face = "bold"),  
+    axis.title.x = element_text(size = 18),               
+    axis.title.y = element_text(size = 18),               
+    axis.text.x = element_text(size = 14, angle = 25, hjust = 1),  
+    axis.text.y = element_text(size = 14),                 
+    legend.text = element_text(size = 14),                 
+    legend.title = element_text(size = 16),                
+    legend.position = "bottom"                             
+  )
+```
+
+# Microbiome-modulating agents
+
+## Create Microbiome-modulating agents data
+
+```{r}
+Microbiome_modulating_agents <- data %>% filter(Non.traditionals.categories == "Microbiome-modulating agents")
+
+```
+
+## what is the anti bacterial class that have been used in Microbiome-modulating agents.
+
+```{r}
+ggplot(Microbiome_modulating_agents,mapping = aes(Antibacterial.class,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## what is R.D phase of this products.
+
+```{r}
+ggplot(Microbiome_modulating_agents,mapping = aes(R.D.phase,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## what pathogens had been tried against products
+
+```{r}
+ggplot(Microbiome_modulating_agents,mapping = aes(Pathogen.name,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## what is the route of administration
+
+```{r}
+ggplot(Microbiome_modulating_agents,mapping = aes(Route.of.administration,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## LOADING Data of microbe modulating agents filtrate from *N/A*
+
+```{r}
+microbe_modulating_agents_data <- AMR_Products %>% filter(Non.traditionals.categories == "Microbiome-modulating agents")
+
+```
+
+## Visualize data
+
+```{r}
+ggplot(microbe_modulating_agents_data,mapping = aes(Active.against.priority.pathogens.,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)
+  )
+```
+
+# Miscellaneous
+
+## loading Miscellaneous data
+
+```{r}
+Miscellaneous_data <- data %>% filter(Non.traditionals.categories == "Miscellaneous")
+```
+
+## what is the anti bacterial class that have been used in Miscellaneous.
+
+```{r}
+ggplot(Miscellaneous_data,mapping = aes(Antibacterial.class,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10))+coord_flip()
+
+```
+
+## what is R.D phase of this products
+
+```{r}
+ggplot(Miscellaneous_data,mapping = aes(R.D.phase,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)
+  )
+```
+
+## what is the route of administration
+
+```{r}
+ggplot(Miscellaneous_data,mapping = aes(Route.of.administration,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)
+  )
+```
+
+##products of Miscellaneous against pathogens.
+
+## loading_data
+
+```{r}
+Miscellaneous_activity_data <- AMR_Products %>% filter(Non.traditionals.categories == "Miscellaneous")
+
+```
+
+## visualize data
+
+```{r}
+ggplot(Miscellaneous_activity_data,mapping = aes(Active.against.priority.pathogens.,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10))
+
+```
+
+# Antibodies data.
+
+## Loading Antibodies data.
+
+```{r}
+antibodies_data <- data %>% filter(Non.traditionals.categories == "Antibodies")
+
+```
+
+## Visualize Antibodies data.
+
+the antibacterial class of Antibodies
+
+```{r}
+ggplot(antibodies_data,mapping = aes(Antibacterial.class,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10))+coord_flip()
+
+```
+
+## what is R.D phase of this products ?
+
+```{r}
+ggplot(antibodies_data,mapping = aes(R.D.phase,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## what pathogens had been tried against products
+
+```{r}
+ggplot(antibodies_data,mapping = aes(Pathogen.name,fill=Product.name))+geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))+
+  theme(axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        axis.text.x = element_text(size = 10,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10)
+  )
+```
+
+##What is the route of administration ?
+
+```{r}
+ggplot(antibodies_data,mapping = aes(Route.of.administration,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+## products of antibodies against pathogens.
+
+## Loading data and Visualize it
+
+```{r}
+#loading_data
+antibodies_activity_data <- AMR_Products %>% filter(Non.traditionals.categories == "Antibodies")
+#visualize data
+ggplot(antibodies_activity_data,mapping = aes(Active.against.priority.pathogens.,fill=Product.name))+
+  geom_bar()+theme_light()+scale_fill_manual(values = pal_igv()(20))
+
+```
+
+That is all the code that has been used up **we also created** :
+
+1.  Notion [Report](https://vigorous-dahlia-f5d.notion.site/AMR-New-Products-Deep-Analysis-38b6b444f6224a15a3afd647f7e6c18f?pvs=4)
+
+2.  Info graphic[ summary](https://drive.google.com/file/d/1xnLhcd_LJfnsJomjtbc3gQtF7GAVvwgg/view)
